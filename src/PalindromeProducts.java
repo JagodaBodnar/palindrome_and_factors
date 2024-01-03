@@ -1,59 +1,34 @@
 import java.util.*;
 
 public class PalindromeProducts {
-    private final int min;
-    private final int max;
-    Map<Long, List<List<Integer>>> mapOfPalindromesAndDivisors = new HashMap<>();
-
-    public PalindromeProducts(int min, int max) {
-        this.min = min;
-        this.max = max;
-    }
-
+    private int min;
+    private int max;
     public static void main(String[] args) {
-        PalindromeProducts palindrome = new PalindromeProducts(1,9);
-        palindrome.getPalindromeProductsWithFactors();
+        PalindromeProducts palindromeProducts = new PalindromeProducts();
+        System.out.println(palindromeProducts.getPalindromeProductsWithFactors(9901,9999));
     }
-
-    public boolean checkIfNumberIsPalindrome(int number) {
+    public boolean checkIfNumberIsPalindrome(long number) {
         String numberToString = "" + number;
-        StringBuilder numberToStringReversed = new StringBuilder();
-        for (int i = numberToString.length() - 1; i >= 0; i--) {
-            numberToStringReversed.append(numberToString.charAt(i));
-        }
+        StringBuilder numberToStringReversed = new StringBuilder(numberToString).reverse();
         return numberToString.contentEquals(numberToStringReversed);
     }
-
-    public SortedMap<Long, List<List<Integer>>> getPalindromeProductsWithFactors() {
-        List<Integer> allPalindromes = findAllPalindromes();
-        for (int i = 0; i < allPalindromes.size(); i++) {
-            getAllFactors(allPalindromes.get(i));
-        }
-        SortedMap<Long, List<List<Integer>>> treeMap = new TreeMap<>(mapOfPalindromesAndDivisors);
-        SortedMap<Long, List<List<Integer>>> finalMap = new TreeMap<>();
-        finalMap.put(treeMap.firstKey(), treeMap.get(treeMap.firstKey()));
-        finalMap.put(treeMap.lastKey(), treeMap.get(treeMap.lastKey()));
-        System.out.println(finalMap);
-        return treeMap;
-    }
-
-    public List<List<Integer>> eliminateDuplicatedFactors(List<List<Integer>> listOfFactors){
-       return listOfFactors.stream().distinct().toList();
-    }
-
-    public List<Integer> findAllPalindromes() {
-        int minPal = min * min;
-        int maxPal = max * max;
-        List<Integer> palindromeList = new ArrayList<>();
-        for (int i = minPal; i <= maxPal; i++) {
-            if (checkIfNumberIsPalindrome(i)) {
-                palindromeList.add(i);
+    public SortedMap<Long, List<List<Integer>>> getPalindromeProductsWithFactors(int minFactor, int maxFactor) {
+        this.min = minFactor;
+        this.max = maxFactor;
+        TreeMap<Long, List<List<Integer>>> palindrome = new TreeMap<>();
+        for(long i = minFactor; i <= maxFactor; i++){
+            for(long j=i; j <= maxFactor; j++){
+                if(checkIfNumberIsPalindrome(j*i)){
+                    palindrome.put(i*j, getAllDistinctDividers(j*i));
+                }
             }
         }
-        return palindromeList;
+        SortedMap<Long, List<List<Integer>>> finalMap = new TreeMap<>();
+        finalMap.put(palindrome.firstKey(), palindrome.get(palindrome.firstKey()));
+        finalMap.put(palindrome.lastKey(), palindrome.get(palindrome.lastKey()));
+        return finalMap;
     }
-
-    public void getAllFactors(long number) {
+    public List<List<Integer>> getAllDistinctDividers(long number){
         List<Integer> listOfDivisors = new ArrayList<>();
         for (int i = 1; i <= number; i++) {
             if (number % i == 0 && min <= i && i <= max) {
@@ -63,28 +38,19 @@ public class PalindromeProducts {
             }
         }
         if (!listOfDivisors.isEmpty()) {
-            createMapOfPalindromeAndItsFactors(createListOfFactors(listOfDivisors, number), number);
+            List<List<Integer>> listOfFactors = new ArrayList<>();
+            for (int i = 0; i < listOfDivisors.size(); i++) {
+                List<Integer> sublistOfFactors = new ArrayList<>();
+                sublistOfFactors.add((int) (number / listOfDivisors.get(i)));
+                sublistOfFactors.add(listOfDivisors.get(i));
+                Collections.sort(sublistOfFactors);
+                listOfFactors.add(sublistOfFactors);
+            }
+            return listOfFactors.stream().distinct().toList();
         }
+        return null;
     }
-
-    public List<List<Integer>> createListOfFactors(List<Integer> listOfDivisors, long number) {
-        List<List<Integer>> listOfFactors = new ArrayList<>();
-        for (int i = 0; i < listOfDivisors.size(); i++) {
-            List<Integer> sublistOfFactors = new ArrayList<>();
-            sublistOfFactors.add((int) (number / listOfDivisors.get(i)));
-            sublistOfFactors.add(listOfDivisors.get(i));
-            Collections.sort(sublistOfFactors);
-            listOfFactors.add(sublistOfFactors);
-        }
-        return eliminateDuplicatedFactors(listOfFactors);
-    }
-
-
     public boolean verifyDivisor(int divisor, long number) {
         return (number / divisor) >= min && (number / divisor) <= max;
-    }
-
-    public void createMapOfPalindromeAndItsFactors(List<List<Integer>> listOfFactors, long number) {
-       mapOfPalindromesAndDivisors.put(number,listOfFactors);
     }
 }
